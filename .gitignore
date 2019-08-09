@@ -1,0 +1,9 @@
+**/output/
+**/build/
+**/dist/
+**/pyqrcodec.egg-info/
+
+
+*.pyc
+
+**/.DS_Store

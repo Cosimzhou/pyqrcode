@@ -19,11 +19,40 @@ class Polynome(object):
             self.__rates = [False] * order
         else:
             self.__assign(value)
+    def __nonzero__(self):
+        return self.order > 0
+    def __cmp__(self, poly):
+        so, po = self.order, poly.order
+        if so != po:
+            return False
+        for i in xrange(so):
+            if self.__rates[i] != poly.__rates[i]:
+                return False
+
+        return True
     def __assign(self, value):
         value = makeBits2String(value)
         if value is None:
             return
         self.__rates = map(char2bool, value)[::-1]
+    def __add__(self, poly):
+        '''
+            多项式加法
+        '''
+        so, po = self.order, poly.order
+        result = Polynome(order=max(so, po))
+        mo, i = min(so, po), 0
+        while i < mo:
+            result.__rates[i] = self.__rates[i] ^ poly.__rates[i]
+            i += 1
+        while i < so:
+            result.__rates[i] = self.__rates[i]
+            i += 1
+        while i < po:
+            result.__rates[i] = poly.__rates[i]
+            i += 1
+        return result
+
     def __mul__(self, poly):
         '''
             多项式乘法

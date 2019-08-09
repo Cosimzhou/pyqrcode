@@ -25,7 +25,7 @@ outputDir = '../../output'
 
 from galois import GaloisField
 from bchcode import BCHCoder
-from bitutil import xbin, strXor, bool2char
+from bitutil import xbin, strXor, bool2char, char2bool
 
 
 class QRDataEncoder(object):
@@ -770,7 +770,7 @@ class QRCoder(QRMaster):
         bch = BCHCoder(15, 5, '10100110111')
         data += bch.encode(data)
         data = strXor(data, '101010000010010')
-        data = map(lambda x: x!='0', data)
+        data = map(char2bool, data)
         for i in xrange(8):
             self.__matrix[8][i if i<6 else i+1] = BBP if data[i] else NBP
             self.__matrix[self.__size-i-1][8] = BBP if data[i] else NBP
@@ -788,7 +788,7 @@ class QRCoder(QRMaster):
         data = xbin(self.__version, 6)
         bch = BCHCoder(18, 6, '1111100100101')
         chkcode = bch.encode(data)
-        data = map(lambda x: x!='0', (data+chkcode)[::-1])
+        data = map(char2bool, (data+chkcode)[::-1])
         startColumn = self.__size-11
         for i in xrange(18):
             self.__matrix[startColumn+i%3][i/3] =  BBP if data[i] else NBP

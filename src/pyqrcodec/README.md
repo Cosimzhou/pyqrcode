@@ -1,1 +1,1 @@
-# pyqrcode
+../../README.md

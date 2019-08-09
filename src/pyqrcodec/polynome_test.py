@@ -16,9 +16,27 @@ class TestPolynome(unittest.TestCase):
         print "tearDown TestPolynome test case."
     def test_mul(self):
         p1, p2 = Polynome(value="1010110101011"), Polynome(value="1010101011")
-        p = p1.mul(p2)
+        p = p1 * p2
         print p1.order, p2.order
-        print p1.printf(),p2.printf(),p.printf()
+        print p1.printf(), p2.printf(), p.printf()
+
+    def test_mod(self):
+        str1, str2 = "1010110101011", "1010101011"
+        p1, p2 = Polynome(value=str1), Polynome(value=str2)
+        p = p1 % p2
+        self.assertEqual(p2 % p1, p1)
+        print p1.order, p2.order
+        print p1.printf(), p2.printf(), p.printf()
+
+    def test_add(self):
+        str1, str2 = "1010110101011", "1010101011"
+        p1, p2 = Polynome(value=str1), Polynome(value=str2)
+        p = p1 + p2
+        print p1.order, p2.order, p.order
+        self.assertEqual(p.order, len(str1))
+        self.assertEqual((p1+p1).order, 0)
+        print p1.printf(), p2.printf(), p.printf()
+
 
     def test_printf(self):
         value = "1010110101011"

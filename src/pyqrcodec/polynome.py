@@ -22,13 +22,14 @@ class Polynome(object):
     def __nonzero__(self):
         return self.order > 0
     def __cmp__(self, poly):
+        return self.__eq__(poly)
+    def __eq__(self, poly):
         so, po = self.order, poly.order
         if so != po:
             return False
         for i in xrange(so):
             if self.__rates[i] != poly.__rates[i]:
                 return False
-
         return True
     def __assign(self, value):
         value = makeBits2String(value)
@@ -66,6 +67,7 @@ class Polynome(object):
                 result.__rates[i] ^= self.__rates[j]
                 i += 1
         return result
+
     def clone(self):
         poly = Polynome()
         poly.__rates = self.__rates[:]
@@ -105,6 +107,106 @@ class Polynome(object):
         ret = Polynome()
         ret.__rates = memory[:top]
         return ret
+    def __div__(self, poly):
+        '''
+            多项式取商
+        '''
+        if not isinstance(poly, Polynome):
+            poly = Polynome(value=poly)
+        so, po = self.order, poly.order
+        if po == 0:
+            raise Exception('Polynome divided by zero')
+        if so < po:
+            return Polynome(value='0')
+        memory = [False]*(so - po)
+        memory.append(True)
+        buf = self.__rates[:so]
+
+        ai, end = -1, po-so-1
+        while ai >= end:
+            if buf[ai]:
+                memory[ai] = True
+                for i in xrange(1, po+1):
+                    buf[ai-i+1] ^= poly.__rates[-i]
+            ai -= 1
+
+        ret = Polynome()
+        ret.__rates = memory
+        return ret
+    def __lshift__(self, num):
+        if num < 0:
+            return self.__rshift(-num)
+        poly = Polynome()
+        poly.__rates = self.__rates + ([False]*num)
+        return poly
+    def __rshift__(self, num):
+        poly = Polynome()
+        if num > len(self.__rates):
+            poly.__rates = [False]
+        elif num < 0:
+            return self.__lshift(-num)
+        else:
+            poly.__rates = self.__rates[num:]
+        return poly
+    def __ilshift__(self, num):
+        self.__rates = self.__rates + ([False]*num)
+        return self
+    def __irshift__(self, num):
+        if num > len(self.__rates):
+            self.__rates = [False]
+        else:
+            self.__rates = self.__rates[num:]
+        return self
+    def __pow__(self, num):
+        if num == 0:
+            return Polynome('1')
+
+        poly = self.clone()
+        while num > 1:
+            poly = self.__mul__(poly)
+            num -= 1
+        return poly
+
+    def __xor__(self, data):
+        '''
+            多项式取商
+        '''
+        if not isinstance(poly, Polynome):
+            poly = Polynome(value=poly)
+        so, po = self.order, poly.order
+        if po == 0:
+            raise Exception('Polynome divided by zero')
+        if so < po:
+            return Polynome(value='0')
+
+        if self.__bchGen is None:
+            return None
+        data = makeBits2String(data)
+        if data is None:
+            return None
+
+        data = data.lstrip('0')[::-1]
+
+        DMN = self.__M - self.__N
+        memory = ([False]*DMN) + map(char2bool, data)
+        assert memory[-1] or data==''
+        top, genlen = len(memory), len(self.__bchGen)
+        while top >= genlen:
+            for i in xrange(-1, -(genlen+1), -1):
+                if self.__bchGen[i] == '1':
+                    memory[top+i] = not memory[top+i]
+            top = 0
+            for i in xrange(len(memory), 0, -1):
+                if memory[i-1]:
+                    top = i
+                    break
+
+        poly = Polynome()
+        poly.__rates = memory[:DMN]
+        return poly
+
+    def __repr__(self):
+        return self.printf()
     @property
     def value(self):
         '''
@@ -126,6 +228,12 @@ class Polynome(object):
             if self.__rates[-1-i]:
                 return len(self.__rates)-i
         return 0
+
+    def extend(self, num):
+        self.__rates += [False]*num
+    def trim(self, num):
+        self.__rates = self.__rates[num:]
+
     def printf(self, **kFormat):
         '''
             输出多项式的字符串表达
@@ -139,8 +247,10 @@ class Polynome(object):
             for i in xrange(len(self.__rates)):
                 if self.__rates[i]:
                     result.append('x^%s'%i)
-            if not kFormat.get('desc'): result.reverse()
-            return '+'.join(result)
+            if result:
+                if not kFormat.get('desc'): result.reverse()
+                return '+'.join(result)
+            return '0'
         else:
             result = (''.join(map(bool2char, self.__rates)))
             if not kFormat.get('desc'): result = result[::-1]
